@@ -64,4 +64,6 @@ export type IconName =
   | 'code'
   | 'dumbbell'
   | 'book'
-  | 'flower';
+  | 'flower'
+  | 'download'
+  | 'upload';

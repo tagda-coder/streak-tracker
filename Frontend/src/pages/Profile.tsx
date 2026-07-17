@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../api/client';
+import { api, ApiError } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import Icon from '../components/Icon';
+import { downloadBackup } from '../utils/backup';
 
 interface Stats {
   totalDaysTracked: number;
@@ -18,6 +19,7 @@ export default function Profile() {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user?.name ?? '');
   const [tagline, setTagline] = useState(user?.tagline ?? '');
+  const [exportError, setExportError] = useState('');
 
   useEffect(() => {
     api.get<Stats>('/profile/stats').then(setStats);
@@ -39,6 +41,15 @@ export default function Profile() {
     const nextTheme = user.theme === 'Dark' ? 'Light' : 'Dark';
     const res = await api.put<{ user: typeof user }>('/profile', { theme: nextTheme });
     if (res.user) updateUser(res.user);
+  }
+
+  async function handleExportData() {
+    setExportError('');
+    try {
+      await downloadBackup();
+    } catch (err) {
+      setExportError(err instanceof ApiError ? err.message : 'Something went wrong');
+    }
   }
 
   if (!user) return null;
@@ -104,11 +115,12 @@ export default function Profile() {
       </div>
 
       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 10 }}>Settings</div>
+      {exportError && <div style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 12 }}>{exportError}</div>}
       <div className="card" style={{ padding: '4px 16px' }}>
-        <SettingRow icon="bell" label="Reminders" />
+        <SettingRow icon="bell" label="Reminders" onClick={() => navigate('/reminders')} />
         <SettingRow icon="gear" label="Theme" value={user.theme} onClick={toggleTheme} />
-        <SettingRow icon="chart" label="Export Data" />
-        <SettingRow icon="clock" label="Backup & Restore" />
+        <SettingRow icon="chart" label="Export Data" onClick={handleExportData} />
+        <SettingRow icon="clock" label="Backup & Restore" onClick={() => navigate('/backup-restore')} />
         <SettingRow icon="x" label="Log Out" onClick={logout} last />
       </div>
     </div>

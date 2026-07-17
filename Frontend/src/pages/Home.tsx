@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { todayStr } from '../utils/date';
 import Icon from '../components/Icon';
@@ -6,6 +7,7 @@ import Heatmap, { HeatmapLegend } from '../components/Heatmap';
 import type { Category, Entry, HeatmapWeek } from '../types';
 
 export default function Home() {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [heatmap, setHeatmap] = useState<HeatmapWeek[]>([]);
@@ -56,7 +58,9 @@ export default function Home() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0 22px' }}>
         <div style={{ width: 22 }} />
         <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Home</div>
-        <Icon name="bell" color="var(--text-primary)" size={21} />
+        <button className="icon-btn" onClick={() => navigate('/reminders')}>
+          <Icon name="bell" color="var(--text-primary)" size={21} />
+        </button>
       </div>
 
       <div className="card" style={{ padding: 20, marginBottom: 16 }}>

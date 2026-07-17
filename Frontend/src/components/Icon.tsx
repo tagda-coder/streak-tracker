@@ -125,6 +125,22 @@ export default function Icon({ name, color = '#ffffff', bg = '#101214', size = 2
           <path d="M12 7.5V12l3 2" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
         </svg>
       );
+    case 'download':
+      return (
+        <svg {...svgProps}>
+          <path d="M12 4v11" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M7.5 11l4.5 4.5 4.5-4.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4.5 18.5h15" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+      );
+    case 'upload':
+      return (
+        <svg {...svgProps}>
+          <path d="M12 15V4" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M7.5 8.5L12 4l4.5 4.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4.5 18.5h15" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+      );
     case 'x':
       return (
         <svg {...svgProps}>
