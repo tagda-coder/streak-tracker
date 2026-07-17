@@ -13,10 +13,19 @@ import exportRoutes from './routes/export';
 const app = express();
 
 const LOCALHOST_ORIGIN = /^http:\/\/localhost:\d+$/;
+// Capacitor's WebView serves the app from these fixed origins (Android
+// defaults to https://localhost, iOS to capacitor://localhost) — unlike
+// CLIENT_ORIGIN these aren't deployment-specific, so they're allowed outright.
+const CAPACITOR_ORIGINS = new Set(['https://localhost', 'capacitor://localhost']);
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || LOCALHOST_ORIGIN.test(origin) || origin === process.env.CLIENT_ORIGIN) {
+      if (
+        !origin ||
+        LOCALHOST_ORIGIN.test(origin) ||
+        CAPACITOR_ORIGINS.has(origin) ||
+        origin === process.env.CLIENT_ORIGIN
+      ) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
