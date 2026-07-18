@@ -3,13 +3,16 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { WEEKDAYS, addDays, formatLong, parseDateStr, toDateStr } from '../utils/date';
 import Icon from '../components/Icon';
-import type { Category, Entry } from '../types';
+import type { Category, Entry, Task } from '../types';
 
 export default function DailyView() {
   const { date = '' } = useParams();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [newTask, setNewTask] = useState('');
+  const [addingTask, setAddingTask] = useState(false);
   const [notes, setNotes] = useState('');
   const [editingNotes, setEditingNotes] = useState(false);
   const [noteDraft, setNoteDraft] = useState('');
@@ -19,15 +22,17 @@ export default function DailyView() {
     let cancelled = false;
     setLoading(true);
     async function load() {
-      const [catsRes, entriesRes, noteRes] = await Promise.all([
+      const [catsRes, entriesRes, noteRes, tasksRes] = await Promise.all([
         api.get<{ categories: Category[] }>('/categories'),
         api.get<{ entries: Entry[] }>(`/entries?start=${date}&end=${date}`),
-        api.get<{ text: string }>(`/notes/${date}`)
+        api.get<{ text: string }>(`/notes/${date}`),
+        api.get<{ tasks: Task[] }>(`/tasks?date=${date}`)
       ]);
       if (cancelled) return;
       setCategories(catsRes.categories);
       setEntries(entriesRes.entries);
       setNotes(noteRes.text);
+      setTasks(tasksRes.tasks);
       setLoading(false);
     }
     load();
@@ -41,6 +46,31 @@ export default function DailyView() {
     const nextStatus = existing?.status === 'completed' ? 'skipped' : 'completed';
     const res = await api.put<{ entry: Entry }>('/entries', { categoryId, date, status: nextStatus });
     setEntries((prev) => [...prev.filter((e) => e.categoryId !== categoryId), res.entry]);
+  }
+
+  async function addTask() {
+    const title = newTask.trim();
+    if (!title) return;
+    setAddingTask(true);
+    try {
+      const res = await api.post<{ task: Task }>('/tasks', { date, title });
+      setTasks((prev) => [...prev, res.task]);
+      setNewTask('');
+    } finally {
+      setAddingTask(false);
+    }
+  }
+
+  async function toggleTask(id: string) {
+    const existing = tasks.find((t) => t.id === id);
+    if (!existing) return;
+    const res = await api.put<{ task: Task }>(`/tasks/${id}`, { done: !existing.done });
+    setTasks((prev) => prev.map((t) => (t.id === id ? res.task : t)));
+  }
+
+  async function removeTask(id: string) {
+    await api.delete(`/tasks/${id}`);
+    setTasks((prev) => prev.filter((t) => t.id !== id));
   }
 
   async function saveNotes() {
@@ -173,6 +203,73 @@ export default function DailyView() {
             </div>
           );
         })}
+      </div>
+
+      <div className="card" style={{ padding: '16px 18px', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>To-Do</div>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--accent-strong)' }}>
+            {tasks.filter((t) => t.done).length} / {tasks.length} done
+          </div>
+        </div>
+
+        {tasks.length === 0 && (
+          <div style={{ padding: '6px 0 12px', color: 'var(--text-secondary)', fontSize: 13.5 }}>
+            No one-off tasks for this day yet.
+          </div>
+        )}
+
+        {tasks.map((task) => (
+          <div
+            key={task.id}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '9px 0',
+              borderBottom: '1px solid var(--divider)'
+            }}
+          >
+            <button
+              className="icon-btn"
+              onClick={() => toggleTask(task.id)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, textAlign: 'left' }}
+            >
+              <Icon name="check" color={task.done ? 'var(--accent)' : 'var(--check-off)'} bg="var(--card)" size={20} />
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: task.done ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                  textDecoration: task.done ? 'line-through' : 'none',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {task.title}
+              </span>
+            </button>
+            <button className="icon-btn" onClick={() => removeTask(task.id)} style={{ marginLeft: 8 }}>
+              <Icon name="x" color="var(--text-tertiary)" size={14} />
+            </button>
+          </div>
+        ))}
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <input
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') addTask();
+            }}
+            placeholder="Add a task for this day…"
+            style={{ flex: 1 }}
+          />
+          <button className="btn-primary" onClick={addTask} disabled={addingTask || !newTask.trim()} style={{ padding: '0 16px' }}>
+            Add
+          </button>
+        </div>
       </div>
 
       <div className="card" style={{ padding: '16px 18px', marginBottom: 16 }}>

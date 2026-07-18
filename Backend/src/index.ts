@@ -9,6 +9,7 @@ import noteRoutes from './routes/notes';
 import analyticsRoutes from './routes/analytics';
 import profileRoutes from './routes/profile';
 import exportRoutes from './routes/export';
+import taskRoutes from './routes/tasks';
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use('/api/notes', noteRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/tasks', taskRoutes);
 
 const PORT = process.env.PORT ?? 4000;
 

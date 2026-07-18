@@ -26,6 +26,13 @@ export interface Entry {
   status: EntryStatus;
 }
 
+export interface Task {
+  id: string;
+  date: string;
+  title: string;
+  done: boolean;
+}
+
 export interface HeatmapDay {
   key: string;
   date: string;
