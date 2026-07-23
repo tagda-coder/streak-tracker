@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { formatLong, todayStr } from '../utils/date';
 import Icon from '../components/Icon';
 import type { Category } from '../types';
 
@@ -66,6 +67,11 @@ export default function Categories() {
               <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text-primary)' }}>{cat.name}</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>{cat.streak} days</div>
             </div>
+            {cat.createdDate > todayStr() && (
+              <div style={{ fontSize: 11.5, color: 'var(--accent-strong)', fontWeight: 600, marginBottom: 5 }}>
+                Starts {formatLong(cat.createdDate)}
+              </div>
+            )}
             <div style={{ height: 5, borderRadius: 3, background: 'var(--track-bg)', overflow: 'hidden' }}>
               <div style={{ height: '100%', borderRadius: 3, background: cat.color, width: `${cat.pct}%` }} />
             </div>

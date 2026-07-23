@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { todayStr } from '../utils/date';
 import Icon from '../components/Icon';
 import type { IconName } from '../types';
 
@@ -14,6 +15,7 @@ export default function AddCategory() {
   const [name, setName] = useState('');
   const [reminder, setReminder] = useState(true);
   const [time, setTime] = useState('09:00');
+  const [startDate, setStartDate] = useState(todayStr());
   const [saving, setSaving] = useState(false);
 
   function cycleIcon() {
@@ -25,7 +27,14 @@ export default function AddCategory() {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      await api.post('/categories', { name: name.trim(), icon, color, reminderEnabled: reminder, reminderTime: time });
+      await api.post('/categories', {
+        name: name.trim(),
+        icon,
+        color,
+        reminderEnabled: reminder,
+        reminderTime: time,
+        startDate
+      });
       navigate('/categories');
     } finally {
       setSaving(false);
@@ -65,6 +74,15 @@ export default function AddCategory() {
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="e.g. Morning Run"
+        style={{ width: '100%', marginBottom: 20 }}
+      />
+
+      <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', fontWeight: 600, marginBottom: 8 }}>Start Date</div>
+      <input
+        type="date"
+        value={startDate}
+        min={todayStr()}
+        onChange={(e) => setStartDate(e.target.value)}
         style={{ width: '100%', marginBottom: 20 }}
       />
 

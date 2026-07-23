@@ -25,7 +25,7 @@ export default function Home() {
         api.get<{ currentStreak: number }>('/analytics/overview')
       ]);
       if (cancelled) return;
-      setCategories(catsRes.categories);
+      setCategories(catsRes.categories.filter((c) => c.createdDate <= today));
       setEntries(entriesRes.entries);
       setHeatmap(heatmapRes.heatmap);
       setCurrentStreak(overviewRes.currentStreak);

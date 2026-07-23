@@ -7,6 +7,7 @@ export interface ICategory extends Document {
   color: string;
   reminderEnabled: boolean;
   reminderTime: string;
+  startDate: string;
   createdAt: Date;
 }
 
@@ -17,7 +18,9 @@ const categorySchema = new Schema<ICategory>(
     icon: { type: String, required: true },
     color: { type: String, required: true },
     reminderEnabled: { type: Boolean, default: false },
-    reminderTime: { type: String, default: '09:00' }
+    reminderTime: { type: String, default: '09:00' },
+    // YYYY-MM-DD; the day the category becomes visible/trackable. Defaults to creation day.
+    startDate: { type: String }
   },
   { timestamps: true }
 );

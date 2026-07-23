@@ -20,7 +20,7 @@ router.get('/', async (req: AuthedRequest, res) => {
     color: c.color,
     reminderEnabled: c.reminderEnabled,
     reminderTime: c.reminderTime,
-    createdDate: toDateStr(new Date(c.createdAt)),
+    createdDate: c.startDate || toDateStr(new Date(c.createdAt)),
     streak: computeCurrentStreak(map, String(c._id)),
     pct: computeCompletionPct(map, start, end, String(c._id))
   }));
@@ -28,9 +28,14 @@ router.get('/', async (req: AuthedRequest, res) => {
 });
 
 router.post('/', async (req: AuthedRequest, res) => {
-  const { name, icon, color, reminderEnabled, reminderTime } = req.body ?? {};
+  const { name, icon, color, reminderEnabled, reminderTime, startDate } = req.body ?? {};
   if (!name || !icon || !color) {
     res.status(400).json({ error: 'name, icon and color are required' });
+    return;
+  }
+  const today = todayStr();
+  if (startDate && startDate < today) {
+    res.status(400).json({ error: 'startDate cannot be in the past' });
     return;
   }
   const category = await Category.create({
@@ -39,7 +44,8 @@ router.post('/', async (req: AuthedRequest, res) => {
     icon,
     color,
     reminderEnabled: !!reminderEnabled,
-    reminderTime: reminderTime || '09:00'
+    reminderTime: reminderTime || '09:00',
+    startDate: startDate || today
   });
   res.status(201).json({
     category: {
@@ -49,7 +55,7 @@ router.post('/', async (req: AuthedRequest, res) => {
       color: category.color,
       reminderEnabled: category.reminderEnabled,
       reminderTime: category.reminderTime,
-      createdDate: toDateStr(category.createdAt),
+      createdDate: category.startDate,
       streak: 0,
       pct: 0
     }
