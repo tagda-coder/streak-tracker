@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Task } from '../models/Task';
 import { authMiddleware, AuthedRequest } from '../middleware/auth';
+import { todayStr } from '../utils/date';
 
 const router = Router();
 router.use(authMiddleware);
@@ -25,29 +26,42 @@ router.post('/', async (req: AuthedRequest, res) => {
     res.status(400).json({ error: 'date and title are required' });
     return;
   }
+  if (date < todayStr()) {
+    res.status(403).json({ error: 'Cannot add tasks for past dates' });
+    return;
+  }
   const task = await Task.create({ userId: req.userId, date, title: String(title).trim(), done: false });
   res.status(201).json({ task: serialize(task) });
 });
 
 router.put('/:id', async (req: AuthedRequest, res) => {
-  const { title, done } = req.body ?? {};
-  const update: Record<string, unknown> = {};
-  if (title !== undefined) update.title = String(title).trim();
-  if (done !== undefined) update.done = !!done;
-  const task = await Task.findOneAndUpdate({ _id: req.params.id, userId: req.userId }, { $set: update }, { new: true });
-  if (!task) {
+  const existing = await Task.findOne({ _id: req.params.id, userId: req.userId });
+  if (!existing) {
     res.status(404).json({ error: 'Task not found' });
     return;
   }
-  res.json({ task: serialize(task) });
+  if (existing.date < todayStr()) {
+    res.status(403).json({ error: 'Cannot modify tasks for past dates' });
+    return;
+  }
+  const { title, done } = req.body ?? {};
+  if (title !== undefined) existing.title = String(title).trim();
+  if (done !== undefined) existing.done = !!done;
+  await existing.save();
+  res.json({ task: serialize(existing) });
 });
 
 router.delete('/:id', async (req: AuthedRequest, res) => {
-  const task = await Task.findOneAndDelete({ _id: req.params.id, userId: req.userId });
-  if (!task) {
+  const existing = await Task.findOne({ _id: req.params.id, userId: req.userId });
+  if (!existing) {
     res.status(404).json({ error: 'Task not found' });
     return;
   }
+  if (existing.date < todayStr()) {
+    res.status(403).json({ error: 'Cannot modify tasks for past dates' });
+    return;
+  }
+  await existing.deleteOne();
   res.json({ ok: true });
 });
 

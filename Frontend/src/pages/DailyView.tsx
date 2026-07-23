@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client';
-import { WEEKDAYS, addDays, formatLong, parseDateStr, toDateStr } from '../utils/date';
+import { WEEKDAYS, addDays, formatLong, parseDateStr, toDateStr, todayStr } from '../utils/date';
 import Icon from '../components/Icon';
 import type { Category, Entry, Task } from '../types';
 
@@ -41,7 +41,10 @@ export default function DailyView() {
     };
   }, [date]);
 
+  const isPast = date < todayStr();
+
   async function toggle(categoryId: string) {
+    if (isPast) return;
     const existing = entries.find((e) => e.categoryId === categoryId);
     const nextStatus = existing?.status === 'completed' ? 'skipped' : 'completed';
     const res = await api.put<{ entry: Entry }>('/entries', { categoryId, date, status: nextStatus });
@@ -49,6 +52,7 @@ export default function DailyView() {
   }
 
   async function addTask() {
+    if (isPast) return;
     const title = newTask.trim();
     if (!title) return;
     setAddingTask(true);
@@ -62,6 +66,7 @@ export default function DailyView() {
   }
 
   async function toggleTask(id: string) {
+    if (isPast) return;
     const existing = tasks.find((t) => t.id === id);
     if (!existing) return;
     const res = await api.put<{ task: Task }>(`/tasks/${id}`, { done: !existing.done });
@@ -69,6 +74,7 @@ export default function DailyView() {
   }
 
   async function removeTask(id: string) {
+    if (isPast) return;
     await api.delete(`/tasks/${id}`);
     setTasks((prev) => prev.filter((t) => t.id !== id));
   }
@@ -197,7 +203,12 @@ export default function DailyView() {
                   <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 2 }}>{cat.reminderTime}</div>
                 </div>
               </div>
-              <button className="icon-btn" onClick={() => toggle(cat.id)}>
+              <button
+                className="icon-btn"
+                onClick={() => toggle(cat.id)}
+                disabled={isPast}
+                style={{ cursor: isPast ? 'default' : 'pointer', opacity: isPast ? 0.6 : 1 }}
+              >
                 <Icon name="check" color={done ? 'var(--accent)' : 'var(--check-off)'} bg="var(--card)" size={24} />
               </button>
             </div>
@@ -233,7 +244,17 @@ export default function DailyView() {
             <button
               className="icon-btn"
               onClick={() => toggleTask(task.id)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, textAlign: 'left' }}
+              disabled={isPast}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                flex: 1,
+                minWidth: 0,
+                textAlign: 'left',
+                cursor: isPast ? 'default' : 'pointer',
+                opacity: isPast ? 0.6 : 1
+              }}
             >
               <Icon name="check" color={task.done ? 'var(--accent)' : 'var(--check-off)'} bg="var(--card)" size={20} />
               <span
@@ -250,13 +271,15 @@ export default function DailyView() {
                 {task.title}
               </span>
             </button>
-            <button className="icon-btn" onClick={() => removeTask(task.id)} style={{ marginLeft: 8 }}>
-              <Icon name="x" color="var(--text-tertiary)" size={14} />
-            </button>
+            {!isPast && (
+              <button className="icon-btn" onClick={() => removeTask(task.id)} style={{ marginLeft: 8 }}>
+                <Icon name="x" color="var(--text-tertiary)" size={14} />
+              </button>
+            )}
           </div>
         ))}
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <div style={{ display: isPast ? 'none' : 'flex', gap: 8, marginTop: 12 }}>
           <input
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
