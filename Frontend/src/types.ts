@@ -13,6 +13,7 @@ export interface Category {
   color: string;
   reminderEnabled: boolean;
   reminderTime: string;
+  createdDate: string;
   streak: number;
   pct: number;
 }

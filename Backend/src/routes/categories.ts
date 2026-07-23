@@ -3,7 +3,7 @@ import { Category } from '../models/Category';
 import { Entry } from '../models/Entry';
 import { authMiddleware, AuthedRequest } from '../middleware/auth';
 import { buildDailyCompletionMap, computeCurrentStreak, computeCompletionPct } from '../services/streaks';
-import { addDays, todayStr } from '../utils/date';
+import { addDays, todayStr, toDateStr } from '../utils/date';
 
 const router = Router();
 router.use(authMiddleware);
@@ -20,6 +20,7 @@ router.get('/', async (req: AuthedRequest, res) => {
     color: c.color,
     reminderEnabled: c.reminderEnabled,
     reminderTime: c.reminderTime,
+    createdDate: toDateStr(new Date(c.createdAt)),
     streak: computeCurrentStreak(map, String(c._id)),
     pct: computeCompletionPct(map, start, end, String(c._id))
   }));
@@ -48,6 +49,7 @@ router.post('/', async (req: AuthedRequest, res) => {
       color: category.color,
       reminderEnabled: category.reminderEnabled,
       reminderTime: category.reminderTime,
+      createdDate: toDateStr(category.createdAt),
       streak: 0,
       pct: 0
     }

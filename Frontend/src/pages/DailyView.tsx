@@ -29,7 +29,7 @@ export default function DailyView() {
         api.get<{ tasks: Task[] }>(`/tasks?date=${date}`)
       ]);
       if (cancelled) return;
-      setCategories(catsRes.categories);
+      setCategories(catsRes.categories.filter((c) => c.createdDate <= date));
       setEntries(entriesRes.entries);
       setNotes(noteRes.text);
       setTasks(tasksRes.tasks);

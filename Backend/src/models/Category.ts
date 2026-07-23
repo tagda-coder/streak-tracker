@@ -7,6 +7,7 @@ export interface ICategory extends Document {
   color: string;
   reminderEnabled: boolean;
   reminderTime: string;
+  createdAt: Date;
 }
 
 const categorySchema = new Schema<ICategory>(
