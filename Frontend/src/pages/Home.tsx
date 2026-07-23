@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { todayStr } from '../utils/date';
@@ -14,6 +14,7 @@ export default function Home() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [loading, setLoading] = useState(true);
   const today = todayStr();
+  const heatmapScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +37,11 @@ export default function Home() {
       cancelled = true;
     };
   }, [today]);
+
+  useEffect(() => {
+    const el = heatmapScrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [heatmap]);
 
   async function toggle(categoryId: string) {
     const existing = entries.find((e) => e.categoryId === categoryId);
@@ -94,7 +100,7 @@ export default function Home() {
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Year Overview</div>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>{new Date().getFullYear()}</div>
         </div>
-        <div style={{ overflowX: 'auto' }}>
+        <div ref={heatmapScrollRef} style={{ overflowX: 'auto' }}>
           <Heatmap weeks={heatmap} compact />
         </div>
         <HeatmapLegend />

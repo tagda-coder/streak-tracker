@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import Icon from '../components/Icon';
@@ -23,6 +23,7 @@ export default function Analytics() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [streaks, setStreaks] = useState<{ id: string; name: string; icon: Category['icon']; color: string; streak: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const heatmapScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,6 +44,11 @@ export default function Analytics() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const el = heatmapScrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [overview, tab]);
 
   if (loading || !overview) return <div style={{ padding: 20, color: 'var(--text-secondary)' }}>Loading…</div>;
 
@@ -134,7 +140,7 @@ export default function Analytics() {
 
           <div className="card" style={{ padding: '16px 18px' }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 14 }}>Activity Heatmap</div>
-            <div style={{ overflowX: 'auto' }}>
+            <div ref={heatmapScrollRef} style={{ overflowX: 'auto' }}>
               <Heatmap weeks={overview.heatmap} />
             </div>
             <HeatmapLegend />
